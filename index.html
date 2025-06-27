@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Футбольная Викторина ⚽️</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+    }
+    body, html {
+      margin: 0; padding: 0; height: 100%;
+      font-family: 'Roboto', sans-serif;
+      overflow-x: hidden;
+      background: linear-gradient(to right, #0047ab 50%, #c8102e 50%);
+      color: #fff;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; width: 50%; height: 100%;
+      background: url('https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg') center/contain no-repeat;
+      opacity: 0.12;
+      pointer-events: none;
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      top: 0; right: 0; width: 50%; height: 100%;
+      background: url('https://upload.wikimedia.org/wikipedia/en/0/0c/Liverpool_FC.svg') center/contain no-repeat;
+      opacity: 0.12;
+      pointer-events: none;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 40px auto;
+      background: rgba(0,0,0,0.75);
+      border-radius: 15px;
+      padding: 25px 30px;
+      box-shadow: 0 0 15px rgba(255,255,255,0.15);
+      animation: fadeInScale 0.8s ease forwards;
+    }
+
+    @keyframes fadeInScale {
+      from {opacity: 0; transform: scale(0.9);}
+      to {opacity: 1; transform: scale(1);}
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      font-weight: 700;
+      font-size: 2.8rem;
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
+      user-select: none;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+      user-select: none;
+      background: #0052cc;
+      color: white;
+      margin: 5px;
+    }
+    button:hover:not(:disabled) {
+      background: #0080ff;
+      transform: scale(1.05);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.6);
+    }
+    button:disabled {
+      background: #555;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .menu-section {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 25px;
+      gap: 15px;
+    }
+    .menu-section label {
+      font-weight: 700;
+      font-size: 1.2rem;
+      margin-right: 15px;
+      align-self: center;
+      user-select: none;
+    }
+
+    .difficulty-btn {
+      background: #222;
+      color: #ddd;
+      min-width: 100px;
+    }
+    .difficulty-btn.active {
+      background: #ffd700;
+      color: #222;
+      font-weight: 700;
+      box-shadow: 0 0 10px #ffd700;
+    }
+
+    #question {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      text-align: center;
+      min-height: 80px;
+      user-select: none;
+    }
+
+    #answers {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    #answers button {
+      background: #222;
+      color: #ddd;
+      font-size: 1.2rem;
+      padding: 12px;
+      border-radius: 12px;
+      box-shadow: 0 0 7px rgba(0,0,0,0.5);
+      transition: background-color 0.4s ease;
+      text-align: center;
+    }
+    #answers button.correct {
+      background: #28a745 !important;
+      color: #fff;
+      box-shadow: 0 0 15px #28a745;
+    }
+    #answers button.wrong {
+      background: #dc3545 !important;
+      color: #fff;
+      box-shadow: 0 0 15px #dc3545;
+    }
+    #answers button:disabled {
+      cursor: default;
+    }
+
+    #timer, #hint, #scoreboard {
+      font-size: 1.1rem;
+      text-align: center;
+      margin-bottom: 12px;
+      font-weight: 600;
+      user-select: none;
+    }
+    #hint {
+      color: #ffd700;
+      font-style: italic;
+      display: none;
+    }
+
+    #nextBtn {
+      display: block;
+      margin: 0 auto 10px auto;
+      background: #17a2b8;
+      box-shadow: 0 0 15px #17a2b8;
+    }
+    #nextBtn.hidden {
+      display: none;
+    }
+
+    #result {
+      text-align: center;
+      font-size: 1.3rem;
+    }
+    #result h3 {
+      margin-top: 20px;
+      font-size: 1.8rem;
+      color: #ffd700;
+      text-shadow: 0 0 10px #ffd700;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <h1>Футбольная Викторина ⚽️</h1>
+
+    <div id="welcome">
+      <div class="menu-section">
+        <label>Количество игроков:</label>
+        <button id="onePlayerBtn">1</button>
+        <button id="twoPlayersBtn">2</button>
+      </div>
+      <div class="menu-section">
+        <label>Выберите сложность:</label>
+        <button class="difficulty-btn active" id="easyBtn">Легкий</button>
+        <button class="difficulty-btn" id="mediumBtn">Средний</button>
+        <button class="difficulty-btn" id="hardBtn">Сложный</button>
+      </div>
+      <div style="text-align:center;">
+        <button id="startBtn" style="background:#28a745; font-weight:700; font-size:1.3rem; padding: 12px 30px;">Начать игру</button>
+      </div>
+    </div>
+
+    <div id="quiz" style="display:none;">
+      <div id="question">Вопрос появится здесь</div>
+      <div id="answers"></div>
+      <div id="timer">⏱️ 7 секунд</div>
+      <div id="hint"></div>
+      <button id="showHintBtn" style="background:#ffc107; color:#222; margin-bottom: 15px;">Показать подсказку</button>
+      <button id="nextBtn" class="hidden">Следующий вопрос</button>
+      <div id="scoreboard"></div>
+      <div style="text-align:center; margin-top: 15px;">
+        <button id="quitBtn" style="background:#dc3545;">Выйти в меню</button>
+      </div>
+    </div>
+
+    <div id="result" style="display:none;">
+      <div id="resultText"></div>
+      <button id="restartBtn" style="background:#007bff; margin-top: 20px;">Играть заново</button>
+      <button id="quitBtn2" style="background:#dc3545; margin-top: 10px;">Выйти в меню</button>
+    </div>
+
+  </div>
+
+  <script>
+    const questionsData = {
+      easy: [
+        { q: "Кто выиграл чемпионат мира 2018 года?", a: ["Бразилия", "Франция", "Германия", "Аргентина"], correct: 1, hint: "Команда, которая выиграла, играет в синих цветах" },
+        { q: "В каком клубе играл Криштиану Роналду до 2021 года?", a: ["Барселона", "Манчестер Юнайтед", "Ювентус", "Реал Мадрид"], correct: 3, hint: "Он был звездой в Мадриде" },
+        { q: "Как называется футболист из Аргентины, знаменитый по прозвищу 'Ла Пульга'?", a: ["Месси", "Ди Мария", "Агуэро", "Тевес"], correct: 0, hint: "Он играл в Барселоне" },
+      ],
+      medium: [
+        { q: "Сколько игроков в команде на поле?", a: ["9", "10", "11", "12"], correct: 2, hint: "Одиннадцать" },
+        { q: "Как называется трофей Лиги Чемпионов?", a: ["Кубок Либертадорес", "Кубок Мира", "Кубок Европы", "Кубок Джулавин"], correct: 2, hint: "Европейский кубок" },
+        { q: "Кто является главным тренером Ливерпуля с 2015 года?", a: ["Пеп Гвардиола", "Юрген Клопп", "Жозе Моуринью", "Карло Анчелотти"], correct: 1, hint: "Немецкий тренер" },
+      ],
+      hard: [
+        { q: "В каком году был основан Реал Мадрид?", a: ["1902", "1910", "1899", "1920"], correct: 0, hint: "Начало 20 века" },
+        { q: "Кто забил самый быстрый гол в истории чемпионата мира?", a: ["Пеле", "Хакан Шукюр", "Диего Марадона", "Луис Суарес"], correct: 1, hint: "Турецкий игрок" },
+        { q: "Как называется футбольный стадион Ливерпуля?", a: ["Анфилд", "Олд Траффорд", "Сантьяго Бернабеу", "Энфилд"], correct: 0, hint: "Он знаменит песней 'You'll Never Walk Alone'" },
+      ]
+    };
+
+    // Элементы
+    const welcomeEl = document.getElementById('welcome');
+    const quizEl = document.getElementById('quiz');
+    const resultEl = document.getElementById('result');
+
+    const onePlayerBtn = document.getElementById('onePlayerBtn');
+    const twoPlayersBtn = document.getElementById('twoPlayersBtn');
+    const easyBtn = document.getElementById('easyBtn');
+    const mediumBtn = document.getElementById('mediumBtn');
+    const hardBtn = document.getElementById('hardBtn');
+    const startBtn = document.getElementById('startBtn');
+
+    const questionEl = document.getElementById('question');
+    const answersEl = document.getElementById('answers');
+    const timerEl = document.getElementById('timer');
+    const hintEl = document.getElementById('hint');
+    const showHintBtn = document.getElementById('showHintBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const scoreboardEl = document.getElementById('scoreboard');
+    const quitBtn = document.getElementById('quitBtn');
+    const quitBtn2 = document.getElementById('quitBtn2');
+    const restartBtn = document.getElementById('restartBtn');
+
+    // Переменные
+    let playerCount = 1;
+    let difficulty = 'easy';
+    let currentQuestionIndex = 0;
+    let scores = [0,0];
+    let currentPlayer = 0;
+    let timer = 7;
+    let timerInterval = null;
+    let answered = false;
+    let hintShown = false;
+
+    // Выбор игроков
+    onePlayerBtn.addEventListener('click', () => {
+      playerCount = 1;
+      onePlayerBtn.classList.add('active');
+      twoPlayersBtn.classList.remove('active');
+      updateScoreboard();
+    });
+    twoPlayersBtn.addEventListener('click', () => {
+      playerCount = 2;
+      twoPlayersBtn.classList.add('active');
+      onePlayerBtn.classList.remove('active');
+      updateScoreboard();
+    });
+
+    // Выбор сложности
+    function setDifficulty(level) {
+      difficulty = level;
+      easyBtn.classList.remove('active');
+      mediumBtn.classList.remove('active');
+      hardBtn.classList.remove('active');
+      if(level === 'easy') easyBtn.classList.add('active');
+      else if(level === 'medium') mediumBtn.classList.add('active');
+      else hardBtn.classList.add('active');
+    }
+    easyBtn.addEventListener('click', () => setDifficulty('easy'));
+    mediumBtn.addEventListener('click', () => setDifficulty('medium'));
+    hardBtn.addEventListener('click', () => setDifficulty('hard'));
+
+    // Начало игры
+    startBtn.addEventListener('click', () => {
+      scores = [0,0];
+      currentPlayer = 0;
+      currentQuestionIndex = 0;
+      answered = false;
+      hintShown = false;
+      welcomeEl.style.display = 'none';
+      quizEl.style.display = 'block';
+      resultEl.style.display = 'none';
+      updateScoreboard();
+      loadQuestion();
+    });
+
+    // Загрузить вопрос
+    function loadQuestion() {
+      answered = false;
+      hintShown = false;
+      hintEl.style.display = 'none';
+      showHintBtn.disabled = false;
+      nextBtn.classList.add('hidden');
+
+      const q = questionsData[difficulty][currentQuestionIndex];
+      questionEl.textContent = `Вопрос: ${q.q}`;
+      answersEl.innerHTML = '';
+      q.a.forEach((ans, i) => {
+        const btn = document.createElement('button');
+        btn.textContent = ans;
+        btn.onclick = () => selectAnswer(i);
+        answersEl.appendChild(btn);
+      });
+
+      timer = 7;
+      timerEl.textContent = `⏱️ Осталось: ${timer} сек.`;
+      timerInterval = setInterval(() => {
+        timer--;
+        timerEl.textContent = `⏱️ Осталось: ${timer} сек.`;
+        if(timer <= 0) {
+          clearInterval(timerInterval);
+          if(!answered) {
+            answered = true;
+            disableAnswers();
+            nextBtn.classList.remove('hidden');
+          }
+        }
+      }, 1000);
+    }
+
+    // Выбор ответа
+    function selectAnswer(i) {
+      if(answered) return;
+      answered = true;
+      clearInterval(timerInterval);
+
+      const q = questionsData[difficulty][currentQuestionIndex];
+      const buttons = answersEl.querySelectorAll('button');
+      buttons.forEach((btn, idx) => {
+        btn.disabled = true;
+        if(idx === q.correct) btn.classList.add('correct');
+        if(idx === i && i !== q.correct) btn.classList.add('wrong');
+      });
+
+      if(i === q.correct) {
+        scores[currentPlayer]++;
+      }
+
+      nextBtn.classList.remove('hidden');
+      updateScoreboard();
+    }
+
+    // Отключить кнопки ответов
+    function disableAnswers() {
+      const buttons = answersEl.querySelectorAll('button');
+      buttons.forEach(btn => btn.disabled = true);
+    }
+
+    // Показать подсказку
+    showHintBtn.addEventListener('click', () => {
+      if(hintShown) return;
+      hintShown = true;
+      const q = questionsData[difficulty][currentQuestionIndex];
+      hintEl.textContent = "Подсказка: " + q.hint;
+      hintEl.style.display = 'block';
+      showHintBtn.disabled = true;
+    });
+
+    // Следующий вопрос
+    nextBtn.addEventListener('click', () => {
+      currentQuestionIndex++;
+      if(currentQuestionIndex >= questionsData[difficulty].length) {
+        showResults();
+        return;
+      }
+      if(playerCount === 2) {
+        currentPlayer = (currentPlayer + 1) % 2;
+      }
+      hintEl.style.display = 'none';
+      showHintBtn.disabled = false;
+      loadQuestion();
+    });
+
+    // Обновить счет
+    function updateScoreboard() {
+      if(playerCount === 1) {
+        scoreboardEl.textContent = `Очки: ${scores[0]}`;
+      } else {
+        scoreboardEl.textContent = `Игрок 1: ${scores[0]} очков | Игрок 2: ${scores[1]} очков | Сейчас ходит Игрок ${currentPlayer + 1}`;
+      }
+    }
+
+    // Показать результаты
+    function showResults() {
+      quizEl.style.display = 'none';
+      resultEl.style.display = 'block';
+      if(playerCount === 1) {
+        resultEl.querySelector('#resultText').innerHTML = `<h3>Ваш результат: ${scores[0]} из ${questionsData[difficulty].length}</h3>`;
+      } else {
+        let winner = '';
+        if(scores[0] > scores[1]) winner = 'Победил Игрок 1!';
+        else if(scores[1] > scores[0]) winner = 'Победил Игрок 2!';
+        else winner = 'Ничья!';
+        resultEl.querySelector('#resultText').innerHTML = `
+          <h3>Результаты:</h3>
+          <p>Игрок 1: ${scores[0]} очков</p>
+          <p>Игрок 2: ${scores[1]} очков</p>
+          <h3>${winner}</h3>
+        `;
+      }
+    }
+
+    // Кнопка выйти в меню
+    quitBtn.addEventListener('click', () => {
+      quizEl.style.display = 'none';
+      welcomeEl.style.display = 'block';
+      clearInterval(timerInterval);
+    });
+    quitBtn2.addEventListener('click', () => {
+      resultEl.style.display = 'none';
+      welcomeEl.style.display = 'block';
+      clearInterval(timerInterval);
+    });
+
+    // Кнопка играть заново
+    restartBtn.addEventListener('click', () => {
+      resultEl.style.display = 'none';
+      startBtn.click();
+    });
+
+    // По умолчанию - 1 игрок, легкий уровень
+    setDifficulty('easy');
+    onePlayerBtn.classList.add('active');
+
+  </script>
+</body>
+</html>
